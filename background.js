@@ -2,6 +2,13 @@ const appToken = '';
 const userKey = '';
 const binanceAddress = '';
 
+let intervalId;
+let checkDuration = 60 * 1000;
+
+/**
+ * Sends a push notification using the Pushover API.
+ * @param {string} message The message to be sent in the notification.
+ */
 async function sendPushoverNotification(message) {
     try {
         const response = await fetch('https://api.pushover.net/1/messages.json', {
@@ -19,9 +26,11 @@ async function sendPushoverNotification(message) {
     }
 }
 
-let intervalId;
-let checkDuration = 60 * 1000;
 
+/**
+ * Checks the wallet balance and initiates withdrawal if balance is greater than 1000.
+ * Updates checkDuration based on success or failure and calls updateInterval().
+ */
 async function checkWallet() {
     try {
         const response = await fetch("https://waxpeer.com/api/user", {
@@ -83,6 +92,9 @@ async function checkWallet() {
     }
 }
 
+/**
+ * Clears the existing interval and sets a new one with the updated checkDuration.
+ */
 function updateInterval() {
     if (intervalId) {
         clearInterval(intervalId);
@@ -90,7 +102,7 @@ function updateInterval() {
     intervalId = setInterval(checkWallet, checkDuration);
 }
 
-
+// Event listener for the 'start_checking' message to initiate wallet checking.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.message === 'start_checking') {
         if (!intervalId) {
