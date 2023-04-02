@@ -20,6 +20,7 @@ function sendPushoverNotification(message) {
 }
 
 let intervalId;
+let checkDuration = 60 * 1000;
 
 function checkWallet() {
     fetch("https://waxpeer.com/api/user", {
@@ -64,16 +65,18 @@ function checkWallet() {
                     .then((withdrawData) => {
                         if (withdrawData.success) {
                             sendPushoverNotification(`Automated Wax Withdrawal amount: $${data.user.wallet / 1000}`);
+                            // reset check duration to 1 minute on success
+                            checkDuration = 60 * 1000;
                         } else {
-                            throw new Error(`Withdrawal failed: ${withdrawData.msg}`);
+                            checkDuration = 2 * checkDuration;
+                            sendPushoverNotification(`Withdrawal failed: ${withdrawData.msg}`);
                         }
                     })
                     .catch((error) => {
                         console.error('Error:', error);
-                        sendPushoverNotification(`Error: ${error.message}`);
+                        // double check duration for each error, reduing the frequency of checks
+                        checkDuration = 2 * checkDuration;
                     });
-
-                console.log('Wallet value greater than 1000');
             }
         })
         .catch((error) => {
@@ -86,7 +89,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.message === 'start_checking') {
         if (!intervalId) {
             checkWallet();
-            intervalId = setInterval(checkWallet, 60 * 1000);
+            intervalId = setInterval(checkWallet, checkDuration);
         }
     }
 });
