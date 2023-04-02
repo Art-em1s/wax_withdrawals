@@ -95,7 +95,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.message === 'start_checking') {
         if (!intervalId) {
             checkWallet();
-            intervalId = setInterval(checkWallet, checkDuration);
+            updateInterval();
         }
     }
 });
